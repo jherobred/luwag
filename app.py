@@ -118,13 +118,17 @@ class Api:
 
 def main():
     api = Api()
+    phone = "--phone" in sys.argv
+    page = os.path.join(HERE, "ui", "index.html")
+    if phone:
+        page += "?shell=phone"
     window = webview.create_window(
-        "Luwag Storage",
-        os.path.join(HERE, "ui", "index.html"),
+        "Luwag Phone" if phone else "Luwag Storage",
+        page,
         js_api=api,
-        width=1280,
-        height=820,
-        min_size=(1024, 680),
+        width=420 if phone else 1280,
+        height=844 if phone else 820,
+        min_size=(360, 640) if phone else (1024, 680),
         frameless=True,
         easy_drag=False,
         background_color="#F7F6F4",

@@ -147,11 +147,19 @@ function applyChrome(settings) {
   else document.documentElement.removeAttribute('data-motion');
 }
 
+const forcePhone = new URLSearchParams(location.search).get('shell') === 'phone';
+
 function paintPanels() {
+  const phone = forcePhone || innerWidth < 760;
+  document.documentElement.dataset.shell = phone ? 'phone' : 'desk';
+  if (phone && !ui.phoneReady) {
+    ui.peekShut = true;
+    ui.phoneReady = true;
+  }
   const narrowSide = innerWidth < 860;
   const narrowPeek = innerWidth < 1100;
-  $('app').classList.toggle('side-shut', ui.sideShut || narrowSide);
-  $('app').classList.toggle('peek-shut', ui.peekShut || narrowPeek);
+  $('app').classList.toggle('side-shut', ui.sideShut || narrowSide || phone);
+  $('app').classList.toggle('peek-shut', ui.peekShut || (narrowPeek && !phone));
   $('toggle-side').setAttribute('aria-label', (ui.sideShut || narrowSide) ? 'Open the sidebar' : 'Collapse the sidebar');
   $('toggle-peek').setAttribute('aria-label', (ui.peekShut || narrowPeek) ? 'Open the preview' : 'Collapse the preview');
 }
@@ -227,7 +235,7 @@ function paintNav() {
     downloads: (snap.files || []).filter((row) => row.group === 'downloads').reduce((sum, row) => sum + (Number(row.bytes) || 0), 0),
     recycle: snap.recycle ? snap.recycle.bytes : 0,
   };
-  for (const button of $('nav').querySelectorAll('[data-view]')) {
+  for (const button of document.querySelectorAll('#nav [data-view], #phone-nav [data-view], #phone-more-list [data-view]')) {
     button.classList.toggle('on', button.dataset.view === ui.view);
     const em = button.querySelector('em');
     if (!em) continue;
@@ -1069,6 +1077,7 @@ async function boot() {
     $('sort').value = ui.sort;
     paintPanels();
     paint();
+    openHello();
     await scan('quick');
     setMaxIcon();
   } catch (err) {
@@ -1099,9 +1108,77 @@ $('toggle-peek').addEventListener('click', () => {
   localStorage.setItem('luwag-peek', ui.peekShut ? 'shut' : 'open');
   paintPanels();
 });
-$('nav').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-view]');
-  if (button) go(button.dataset.view);
+function bindViews(root) {
+  root.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-view]');
+    if (!button) return;
+    go(button.dataset.view);
+    if ($('phone-more').open) $('phone-more').close();
+  });
+}
+bindViews($('nav'));
+bindViews($('phone-nav'));
+bindViews($('phone-more-list'));
+$('phone-more-open').addEventListener('click', () => $('phone-more').showModal());
+$('phone-details').addEventListener('click', () => {
+  ui.peekShut = false;
+  $('phone-more').close();
+  paintPanels();
+});
+$('phone-settings').addEventListener('click', () => {
+  $('phone-more').close();
+  openSettings();
+});
+
+const HELLO = [
+  ['models/logo.png', 'See this PC', 'Luwag measures the drives on this computer. The numbers come from the scan, and nothing is recycled until you confirm it.'],
+  ['models/shield.png', 'Important folders stay', 'Windows, Program Files, sign-in files, and Git history are refused. Desktop, Documents, Pictures, Videos, Music, and OneDrive ask you to type RECYCLE.'],
+  ['models/disk.png', 'The pictures can move', 'Each file kind has a clay model. You can leave the motion on, or match Windows and keep it still.'],
+];
+let helloStep = 0;
+
+function paintHello() {
+  const step = HELLO[helloStep];
+  $('hello-model').src = step[0];
+  $('hello-title').textContent = step[1];
+  $('hello-text').textContent = step[2];
+  $('hello-step').textContent = (helloStep + 1) + ' of ' + HELLO.length;
+  $('hello-back').hidden = helloStep === 0;
+  $('hello-motion-row').classList.toggle('show', helloStep === HELLO.length - 1);
+  $('hello-next').textContent = helloStep === HELLO.length - 1 ? 'Start' : 'Next';
+}
+
+function openHello() {
+  const settings = ui.snap && ui.snap.settings;
+  if (!settings || settings.onboarded || $('hello').open) return;
+  helloStep = 0;
+  $('hello-motion').checked = motionOn(settings);
+  paintHello();
+  $('hello').showModal();
+}
+
+async function finishHello(applyMotion) {
+  const patch = { onboarded: true };
+  if (applyMotion) patch.motion = $('hello-motion').checked;
+  $('hello').close();
+  await saveSettings(patch);
+}
+
+$('hello-next').addEventListener('click', () => {
+  if (helloStep < HELLO.length - 1) {
+    helloStep += 1;
+    paintHello();
+    return;
+  }
+  finishHello(true);
+});
+$('hello-back').addEventListener('click', () => {
+  if (helloStep > 0) helloStep -= 1;
+  paintHello();
+});
+$('hello').addEventListener('cancel', (event) => {
+  event.preventDefault();
+  finishHello(false);
 });
 $('query').addEventListener('input', () => { ui.query = $('query').value; paint(); });
 $('sort').addEventListener('change', () => {

@@ -218,6 +218,16 @@ class EngineTests(unittest.TestCase):
             time.sleep(0.25)
         return False
 
+    def test_onboarding_flag_starts_off(self):
+        self.assertFalse(self.engine.snapshot()["settings"]["onboarded"])
+        result = self.engine.update_settings({"onboarded": True, "motion": True})
+        self.assertTrue(result["ok"])
+        self.assertTrue(self.engine.snapshot()["settings"]["onboarded"])
+        self.assertTrue(self.engine.snapshot()["settings"]["motion"])
+        self.engine.update_settings({"onboarded": "yes", "motion": False})
+        self.assertFalse(self.engine.snapshot()["settings"]["onboarded"])
+        self.assertFalse(self.engine.snapshot()["settings"]["motion"])
+
     def test_unknown_scan_does_not_start(self):
         result = self.engine.start("wipe")
         self.assertFalse(result["ok"])

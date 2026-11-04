@@ -123,6 +123,14 @@
   </aside>
 </div>
 
+<nav class="phone-nav" id="phone-nav" aria-label="Phone views">
+  <button type="button" data-view="overview"><img class="model" src="models/disk.png" alt="" width="28" height="28"><span>Overview</span></button>
+  <button type="button" data-view="junk"><img class="model" src="models/bin.png" alt="" width="28" height="28"><span>Junk</span></button>
+  <button type="button" data-view="caches"><img class="model" src="models/cache.png" alt="" width="28" height="28"><span>Caches</span></button>
+  <button type="button" data-view="dev"><img class="model" src="models/code.png" alt="" width="28" height="28"><span>Dev</span></button>
+  <button type="button" id="phone-more-open"><img class="model" src="models/folder.png" alt="" width="28" height="28"><span>More</span></button>
+</nav>
+
 <div class="menu" id="menu" hidden role="menu"></div>
 <dialog class="sheet" id="sheet" aria-labelledby="sheet-title"></dialog>
 <dialog class="prefs" id="prefs" aria-labelledby="prefs-title">
@@ -132,6 +140,34 @@
   </header>
   <div class="prefs-body" id="prefs-body"></div>
 </dialog>
+<dialog class="sheet" id="phone-more" aria-labelledby="phone-more-title">
+  <form method="dialog" class="sheet-pad">
+    <h2 id="phone-more-title">More</h2>
+    <div class="phone-more-list" id="phone-more-list">
+      <button type="button" data-view="large"><img class="model" src="models/page.png" alt=""><span>Large files</span></button>
+      <button type="button" data-view="duplicates"><img class="model" src="models/twins.png" alt=""><span>Duplicates</span></button>
+      <button type="button" data-view="downloads"><img class="model" src="models/parcel.png" alt=""><span>Old downloads</span></button>
+      <button type="button" data-view="recycle"><img class="model" src="models/bin.png" alt=""><span>Recycle Bin</span></button>
+      <button type="button" data-view="protected"><img class="model" src="models/shield.png" alt=""><span>Protected</span></button>
+      <button type="button" id="phone-details"><img class="model" src="models/photo.png" alt=""><span>Details</span></button>
+      <button type="button" id="phone-settings"><img class="model" src="models/logo.png" alt=""><span>Settings</span></button>
+    </div>
+    <div class="btns"><button type="submit" class="pill">Close</button></div>
+  </form>
+</dialog>
+<dialog class="hello" id="hello" aria-labelledby="hello-title">
+  <form method="dialog">
+    <img class="model peek-model" id="hello-model" src="models/logo.png" alt="" width="112" height="112">
+    <p class="note" id="hello-step">1 of 3</p>
+    <h2 id="hello-title">See this PC</h2>
+    <p id="hello-text"></p>
+    <label class="hello-motion" id="hello-motion-row"><input type="checkbox" id="hello-motion" checked> Let the models move</label>
+    <div class="btns">
+      <button type="button" class="pill" id="hello-back">Back</button>
+      <button type="button" class="pill primary" id="hello-next">Next</button>
+    </div>
+  </form>
+</dialog>
 <div class="toast" id="toast" hidden role="status"><span id="toast-text"></span><button type="button" id="toast-act" hidden>Scan again</button></div>
 <div id="live" class="sr" aria-live="polite"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=8"></script>

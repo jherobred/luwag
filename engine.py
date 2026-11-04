@@ -45,6 +45,7 @@ DEFAULTS = {
     "tempDays": 7,
     "extraProtected": [],
     "history": [],
+    "onboarded": False,
 }
 
 
@@ -310,6 +311,7 @@ class Engine:
         data["theme"] = data["theme"] if data["theme"] in ("system", "light", "dark") else "system"
         if data["motion"] not in (True, False, None):
             data["motion"] = None
+        data["onboarded"] = data.get("onboarded") is True
         data["largeMinMB"] = min(10000, max(10, int(data["largeMinMB"] or 100)))
         data["downloadDays"] = min(3650, max(1, int(data["downloadDays"] or 30)))
         data["tempDays"] = min(3650, max(1, int(data["tempDays"] or 7)))
@@ -400,6 +402,7 @@ class Engine:
                 "downloadDays": self.settings["downloadDays"],
                 "tempDays": self.settings["tempDays"],
                 "extraProtected": list(self.settings["extraProtected"]),
+                "onboarded": self.settings["onboarded"] is True,
             }
             payload = {
                 "rev": self.state["rev"],
@@ -468,6 +471,8 @@ class Engine:
                 self.settings["downloadDays"] = min(3650, max(1, int(patch["downloadDays"])))
             if "tempDays" in patch:
                 self.settings["tempDays"] = min(3650, max(1, int(patch["tempDays"])))
+            if "onboarded" in patch:
+                self.settings["onboarded"] = patch["onboarded"] is True
             self._save_settings()
             self._bump(True)
         return {"ok": True, "settings": self.snapshot()["settings"]}

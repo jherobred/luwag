@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Luwag Setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: Geist; src: url("../ui/fonts/Geist.woff2") format("woff2"); font-weight: 100 900; font-display: swap }
+  :root {
+    color-scheme: light;
+    --bg: #F7F6F4; --surface: #FFFFFF; --soft: #EFEEEB; --ink: #151413; --muted: #66645F;
+    --accent: #B84C0C; --accent-ink: #FFFFFF; --line: #E3E1DD;
+    --drift: linear(0, 0.021, 0.073, 0.146, 0.232, 0.324, 0.417, 0.508, 0.594, 0.672, 0.745, 0.806, 0.859, 0.903, 0.94, 0.969, 0.992, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --bg: #111113; --surface: #18181A; --soft: #222225; --ink: #F4F3F1; --muted: #A3A19C; --accent: #FF8A3D; --accent-ink: #0F0F10; --line: #2C2C2F }
+  }
+  * { box-sizing: border-box }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 400 15px/1.45 Geist, "Segoe UI", sans-serif }
+  body { display: flex; flex-direction: column; padding: 28px 28px 22px }
+  button { cursor: pointer; font: inherit }
+  button:disabled { cursor: not-allowed }
+  button:focus-visible { outline: 3px solid #C98E52; outline-offset: 2px }
+  .drag { position: fixed; top: 0; left: 0; right: 92px; height: 36px }
+  .x { position: fixed; top: 8px; right: 8px; width: 46px; height: 40px; border: 0; border-radius: 8px; background: none; color: var(--muted) }
+  .x:hover { background: #C42B1C; color: white }
+  .stage { width: 96px; height: 96px; perspective: 640px }
+  .logo { width: 96px; height: 96px; object-fit: contain; animation: yaw 4.2s var(--drift) 1 both }
+  @keyframes yaw { 0% { transform: rotateY(-18deg) translateY(0) } 50% { transform: rotateY(18deg) translateY(-4px) } 100% { transform: rotateY(-18deg) translateY(0) } }
+  @media (prefers-reduced-motion: reduce) { .logo { animation: none } }
+  h1 { margin: 14px 0 4px; font-size: 26px; letter-spacing: -.02em }
+  .meta { margin: 0; color: var(--muted) }
+  ul { margin: 18px 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px }
+  li { min-height: 28px }
+  .path { margin-top: auto; padding: 10px 12px; border-radius: 10px; background: var(--soft); color: var(--muted); font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all }
+  .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px }
+  button.act { height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--soft); color: var(--ink); font-weight: 600 }
+  button.go { background: var(--accent); color: var(--accent-ink) }
+  button:disabled { opacity: .55 }
+  .err { color: #C2362B; font-weight: 600 }
+  #work, #done { display: none }
+  body.work #ask, body.done #ask, body.done #work { display: none }
+  body.work #work, body.done #done { display: block }
+</style>
+<body>
+  <div class="drag pywebview-drag-region"></div>
+  <button type="button" class="x" id="close" aria-label="Close">×</button>
+  <div class="stage"><img class="logo" src="../ui/models/logo.png" alt="" width="96" height="96"></div>
+  <div id="ask">
+    <h1>Install Luwag</h1>
+    <p class="meta">For this Windows user. No administrator prompt.</p>
+    <ul>
+      <li>Measures what is using this PC.</li>
+      <li>Sends only the files you choose to the Recycle Bin.</li>
+      <li>Adds a Start menu shortcut and a desktop shortcut.</li>
+    </ul>
+  </div>
+  <div id="work">
+    <h1>Installing</h1>
+    <p class="meta" id="work-text">Copying Luwag into your user folder.</p>
+  </div>
+  <div id="done">
+    <h1>Luwag is installed</h1>
+    <p class="meta">Open it now, or from the Start menu later.</p>
+  </div>
+  <p class="path" id="dest"></p>
+  <p class="err" id="err" hidden></p>
+  <div class="row">
+    <button type="button" class="act" id="cancel">Cancel</button>
+    <button type="button" class="act go" id="go">Install</button>
+  </div>
+<script>
+const $ = (id) => document.getElementById(id);
+function api() {
+  const bridge = window.pywebview && window.pywebview.api;
+  if (!bridge || typeof bridge.info !== 'function') return null;
+  return bridge;
+}
+function say(text) {
+  $('err').hidden = !text;
+  $('err').textContent = text || '';
+}
+async function boot() {
+  const bridge = api();
+  if (!bridge) return false;
+  try {
+    const info = await bridge.info();
+    $('dest').textContent = info.dest || '';
+    if (info.error) {
+      say(info.error);
+      $('go').disabled = true;
+    }
+  } catch (err) {
+    say((err && err.message) || 'Setup could not read the package.');
+    $('go').disabled = true;
+  }
+  return true;
+}
+$('close').addEventListener('click', () => { const bridge = api(); if (bridge) bridge.close(); });
+$('cancel').addEventListener('click', () => { const bridge = api(); if (bridge) bridge.close(); });
+$('go').addEventListener('click', async () => {
+  const bridge = api();
+  if (!bridge) { say('Setup is not connected.'); return; }
+  if (document.body.classList.contains('done')) {
+    $('go').disabled = true;
+    await bridge.open_app();
+    return;
+  }
+  document.body.classList.add('work');
+  $('go').disabled = true;
+  $('cancel').disabled = true;
+  const result = await bridge.install();
+  $('go').disabled = false;
+  $('cancel').disabled = false;
+  if (!result || !result.ok) {
+    document.body.classList.remove('work');
+    say((result && result.error) || 'Install did not finish.');
+    return;
+  }
+  document.body.classList.remove('work');
+  document.body.classList.add('done');
+  $('dest').textContent = result.dest || $('dest').textContent;
+  $('cancel').hidden = true;
+  $('go').textContent = 'Open Luwag';
+});
+window.addEventListener('pywebviewready', () => setTimeout(boot, 0));
+(function connect(left) {
+  if (api()) { setTimeout(boot, 0); return; }
+  if (left <= 0) {
+    say('Setup is not connected.');
+    $('go').disabled = true;
+    return;
+  }
+  setTimeout(() => connect(left - 1), 100);
+})(80);
+</script>
+</body>
+</html>

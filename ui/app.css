@@ -6,6 +6,8 @@
    Radius: 10 / 12 / 18, pills only on search, chips, and the selection bar.
    Shadow: only the selection bar, toast, menu, and dialogs, the Gallery elevation for things that float above the page.
    Motion: Drift grows a bar when a measurement arrives. Float brings in the selection bar, toast, and confirm sheet. Snap is the press. Rows do not bounce.
+   Model yaw: a clay picture turns so a file kind reads as an object. Settings, Motion, Off is the pause. Reduced motion keeps them still until that setting is On.
+   Phone: under 760px, and with ?shell=phone, the side nav becomes a bottom bar and the preview becomes a sheet. The same scan has to fit a narrow window.
    Icons: chrome stays 1.75 round strokes. File kinds and the nav use the clay models in ui/models. */
 
 @font-face { font-family: Geist; src: url(fonts/Geist.woff2) format('woff2'); font-weight: 100 900; font-display: swap }
@@ -178,8 +180,14 @@ select { height: 30px; padding: 0 8px; border-radius: var(--r-row); border: 1px 
 .banner { padding: 10px 12px; border-radius: var(--r-row); background: var(--soft); margin-bottom: 10px }
 .history { width: 100%; height: 88px }
 .history polyline { fill: none; stroke: var(--accent); stroke-width: 2 }
-@keyframes model-bob { 50% { transform: translateY(-4px) } }
-.peek-model { animation: model-bob 5.2s var(--drift) infinite }
+.nav button, .row, .map button, .brand, .peek-body, .phone-nav button, .phone-more-list button, .hello form { perspective: 640px }
+@keyframes model-yaw {
+  0% { transform: rotateY(-18deg) translateY(0) }
+  50% { transform: rotateY(18deg) translateY(-4px) }
+  100% { transform: rotateY(-18deg) translateY(0) }
+}
+.model { animation: model-yaw 6.8s var(--drift) infinite }
+.peek-model { width: 112px; height: 112px; margin: 0 0 4px; animation-duration: 5.2s }
 .dupe { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line) }
 .dupe h3 { margin: 0 0 6px; font-size: 14px }
 .keep { color: var(--ok); font-size: 12px; font-weight: 600 }
@@ -271,3 +279,57 @@ kbd { font: inherit; font-size: 12px; padding: 1px 6px; border-radius: 6px; back
   .row { grid-template-columns: 22px 40px minmax(0, 1fr) auto }
   .share { display: none }
 }
+
+.phone-nav { display: none }
+.hello { border: 0; border-radius: var(--r-panel); background: var(--surface); color: var(--ink); width: min(420px, 92vw); max-height: min(92vh, 640px); overflow: auto; box-shadow: var(--shadow) }
+.hello form { display: flex; flex-direction: column; gap: 12px; padding: 22px }
+.hello h2 { margin: 0; font-size: 22px }
+.hello p { margin: 0; color: var(--muted) }
+.hello-motion { display: none; align-items: center; gap: 8px; min-height: 44px }
+.hello-motion.show { display: flex }
+.hello::backdrop { background: var(--backdrop) }
+.phone-more-list { display: flex; flex-direction: column; gap: 4px }
+.phone-more-list button { display: flex; align-items: center; gap: 10px; min-height: 48px; border: 0; border-radius: var(--r-row); background: none; text-align: left; padding: 6px 8px }
+.phone-more-list button:hover { background: var(--soft) }
+@keyframes bar-in-phone { from { opacity: 0; transform: translateY(12px) } }
+
+html[data-shell="phone"] .phone-nav {
+  display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 66;
+  height: calc(72px + env(safe-area-inset-bottom)); padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: var(--surface); border-top: 1px solid var(--line); gap: 4px
+}
+html[data-shell="phone"] .phone-nav button {
+  flex: 1; min-width: 0; min-height: 56px; border: 0; border-radius: var(--r-row); background: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--muted); padding: 4px
+}
+html[data-shell="phone"] .phone-nav button.on { background: var(--soft-2); color: var(--ink); font-weight: 600 }
+html[data-shell="phone"] .phone-nav span { font-size: 11px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+html[data-shell="phone"] .phone-nav .model { width: 28px; height: 28px }
+html[data-shell="phone"] .app { display: block; height: 100% }
+html[data-shell="phone"] .side { display: none }
+html[data-shell="phone"] .main { height: 100%; padding-bottom: calc(72px + env(safe-area-inset-bottom)) }
+html[data-shell="phone"] .peek {
+  position: fixed; left: 10px; right: 10px; bottom: calc(82px + env(safe-area-inset-bottom)); top: auto; height: min(48vh, 440px); z-index: 50;
+  border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--shadow); overflow: auto
+}
+html[data-shell="phone"] .app.peek-shut .peek { display: none }
+html[data-shell="phone"] .bar { flex-wrap: wrap; height: auto; min-height: var(--top); padding: var(--strip) 16px 8px }
+html[data-shell="phone"] .search { width: 100%; height: 44px }
+html[data-shell="phone"] .tools { padding: 10px 16px; gap: 8px }
+html[data-shell="phone"] .chips button,
+html[data-shell="phone"] .pill,
+html[data-shell="phone"] select { min-height: 44px; height: 44px }
+html[data-shell="phone"] .scroll { padding: 4px 12px 120px 16px }
+html[data-shell="phone"] .map { height: 132px }
+html[data-shell="phone"] .status p { white-space: normal }
+html[data-shell="phone"] .selbar {
+  left: 10px; right: 10px; bottom: calc(80px + env(safe-area-inset-bottom)); transform: none; max-width: none;
+  flex-wrap: wrap; justify-content: flex-end; animation-name: bar-in-phone
+}
+html[data-shell="phone"] .selbar button { min-height: 44px; height: auto }
+html[data-shell="phone"] .toast {
+  left: 10px; right: 10px; bottom: calc(84px + env(safe-area-inset-bottom)); transform: none; max-width: none;
+  animation-name: bar-in-phone
+}
+html[data-shell="phone"] .has-bar .toast { bottom: calc(168px + env(safe-area-inset-bottom)) }
+html[data-shell="phone"] .caption { background: var(--bg) }
