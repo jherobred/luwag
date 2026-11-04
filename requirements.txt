@@ -1,0 +1,2 @@
+pywebview==6.2.1
+send2trash==2.1.0

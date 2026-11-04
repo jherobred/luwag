@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+ui/models/src/
+ui/models/*-src.jpg
+*.log
+.env*
